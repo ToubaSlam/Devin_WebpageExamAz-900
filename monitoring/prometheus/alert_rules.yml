@@ -1,0 +1,41 @@
+groups:
+  - name: flask_api_alerts
+    rules:
+
+      # Fires when 5xx responses exceed 5% of total requests over 5 minutes.
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%) over the last 5 minutes."
+
+      # Fires when p95 response time exceeds 1 second.
+      - alert: HighResponseLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 1.0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response latency"
+          description: "p95 latency is {{ $value | humanizeDuration }} (threshold: 1s)."
+
+      # Fires if Prometheus cannot scrape the Flask app at all.
+      - alert: ApiDown
+        expr: up{job="flask-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask API is unreachable"
+          description: "Prometheus cannot scrape the Flask API. The container may be down."

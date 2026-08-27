@@ -1,0 +1,23 @@
+# Prometheus configuration
+# Prometheus PULLS (scrapes) metrics from targets at scrape_interval.
+# The Flask app exposes metrics at /metrics via prometheus_flask_instrumentator.
+
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  # "api" resolves to the Flask container via Docker's internal DNS.
+  # Metrics include: http_requests_total, http_request_duration_seconds_*
+  - job_name: "flask-api"
+    static_configs:
+      - targets: ["api:5000"]
+    metrics_path: /metrics
+
+  # Scraping Prometheus itself lets you monitor its own health in Grafana.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

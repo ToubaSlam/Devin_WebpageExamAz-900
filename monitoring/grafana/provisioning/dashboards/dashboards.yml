@@ -1,0 +1,12 @@
+# Tells Grafana where to find dashboard JSON files on disk.
+apiVersion: 1
+
+providers:
+  - name: default
+    orgId: 1
+    folder: Portfolio
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

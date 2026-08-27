@@ -1,0 +1,11 @@
+# Grafana reads this on startup and auto-creates the Prometheus datasource.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # "prometheus" resolves via Docker DNS to the Prometheus container.
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false

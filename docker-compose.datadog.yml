@@ -1,0 +1,47 @@
+# ── Optional: Datadog monitoring overlay ─────────────────────────────────────
+# Extend the production stack with Datadog APM and infra monitoring.
+# Usage:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.datadog.yml up -d
+#
+# Prerequisites:
+#   - Sign up at https://www.datadoghq.com (free trial)
+#   - Add DD_API_KEY to your .env file
+version: "3.9"
+
+services:
+
+  datadog-agent:
+    image: datadog/agent:7
+    container_name: datadog-agent
+    restart: unless-stopped
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: datadoghq.com
+      DD_APM_ENABLED: "true"
+      DD_APM_NON_LOCAL_TRAFFIC: "true"
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_CONTAINER_EXCLUDE: "name:datadog-agent"
+      DD_HOSTNAME: ${VM_PUBLIC_IP:-portfolio-vm}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # Override api to inject Datadog APM labels and env vars
+  api:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "portfolio-api"}]'
+    environment:
+      DD_AGENT_HOST: datadog-agent
+      DD_TRACE_AGENT_PORT: "8126"
+      DD_SERVICE: portfolio-api
+      DD_ENV: production
+      DD_VERSION: ${IMAGE_TAG:-latest}

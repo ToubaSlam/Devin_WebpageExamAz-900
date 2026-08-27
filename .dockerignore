@@ -1,0 +1,15 @@
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.coverage
+coverage.xml
+*.egg-info
+.venv
+venv
+terraform
+runbooks
+*.md
+tests
